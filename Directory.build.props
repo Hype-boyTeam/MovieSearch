@@ -1,0 +1,20 @@
+<Project>
+    <PropertyGroup>
+        <ProjectRootDir>$(MSBuildThisFileDirectory)</ProjectRootDir>
+        <!-- <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath> -->
+        <!-- <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath> -->
+    </PropertyGroup>
+    
+    <!--
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <OutputPath>$(MSBuildThisFileDirectory)/bin/Debug</OutputPath>
+    </PropertyGroup>
+    -->
+
+    <!--
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <OutputPath>$(MSBuildThisFileDirectory)/bin/Release</OutputPath>
+        <PublishSingleFile>true</PublishSingleFile>
+    </PropertyGroup>
+    -->
+</Project>

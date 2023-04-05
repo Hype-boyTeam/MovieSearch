@@ -1,0 +1,27 @@
+name: Build
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: |
+          dotnet build --configuration Release
+      - name: Publish
+        run: |
+          dotnet publish MovieSearch/MovieSearch.csproj \
+          --configuration Release \
+          --self-contained \
+          --runtime linux-x64 \
+          --output bin
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: MovieSearch
+          path: bin/
+          # 하루만 저장
+          retention-days: 1
