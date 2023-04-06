@@ -49,9 +49,15 @@ public class SearchController : ControllerBase
     [HttpGet("db_test/{name}")]
     public async Task<ActionResult<string?>> TestGetUrl(MovieDb db, string name)
     {
-        return await db.Infos
+        _logger.LogTrace("로깅 예제: Searching for {Name}...", name);
+        
+        var url = await db.Infos
             .Where(row => row.Name == name)
             .Select(row => row.InfoUrl)
             .FirstOrDefaultAsync();
+
+        _logger.LogDebug("{Name}에 해당하는 url 검색 결과: {Url}", name, url ?? "결과 없음");
+
+        return url;
     }
 }
