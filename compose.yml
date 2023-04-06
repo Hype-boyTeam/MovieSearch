@@ -10,6 +10,7 @@ services:
     # resart: on-failure
     profiles: ["dev"]
     environment:
+      ES_JAVA_OPTS: "-Xms256m -Xmx1024m"
       discovery.type: single-node
       xpack.security.enabled: "false"
     ports:
