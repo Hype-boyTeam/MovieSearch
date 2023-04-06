@@ -1,0 +1,42 @@
+services:
+  app:
+    build: .
+    profiles: ["app"]
+    networks:
+      - internal
+
+  elastic_dev:
+    image: elasticsearch:8.6.2
+    # resart: on-failure
+    profiles: ["dev"]
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+    ports:
+      - 127.0.0.1:9200:9200
+      - 127.0.0.1:9300:9300
+    ulimits:
+      nproc: 65535
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+
+  postgres_dev:
+    image: postgres:15
+    # restart: on-failure
+    profiles: ["dev"]
+    environment:
+      # Do NOT use this in production
+      POSTGRES_USER: moviesearch
+      POSTGRES_PASSWORD: password_testonly
+      POSTGRES_DB: moviesearch
+    ports:
+      - 127.0.0.1:5432:5432
+
+networks:
+  internal:

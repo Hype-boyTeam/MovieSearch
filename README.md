@@ -1,27 +1,34 @@
 # MovieSearch API
 [![master](https://github.com/Hype-boyTeam/MovieSearch/actions/workflows/build.yml/badge.svg)](https://github.com/Hype-boyTeam/MovieSearch/actions/workflows/build.yml)
 
-프로젝트 설명 asdf TODO
+TODO: 설명, 검색기능 제공하는 서버
 
 ## 개발 환경 설정 및 실행
-### Prerequisites
+### 의존하고 있는 도구
 - [elasticsearch](https://www.elastic.co/)
 - [postgres](https://www.postgresql.org) (예정?)
+
+위에 명시한 툴을 직접 설치하고 설정하는 과정을 생략할 수 있도록 간단한 [docker compose file](compose.yml)을 제공하고 있습니다.
+[Docker Desktop](https://docs.docker.com/desktop/install/windows-install/)을 설치한 다음 터미널에서 `docker compose --profile=dev up`를 입력하세요. 종료할 때는 Ctrl+C를 누르면 됩니다.
+
 
 ### `appsettings.Development.json` 설정
 #### ConnectionStrings
 | Key | Notes |
 |:----|:------|
-| ElasticHost | elasticsearch host todo todo. |
-| ElasticUser | elasticsearch의 계정명 |
-| ElasticPassword | `ElasticUser`의 비밀번호 |
-| Postgres | postgres connection string todo todo |
+| ElasticHost | elasticsearch가 실행되고 있는 호스트의 주소 |
+| ElasticUser | 접속할 elasticsearch의 계정명 |
+| ElasticPassword | 위 elastic 계정의 비밀번호 |
+| Postgres | postgres connection string |
 
 
 ### MovieSearch 실행
-개발 환경이 실행 중인지 확인하고. `dotnet watch --project MovieSearch`를 터미널에 입력하여 TODO TODO
+필요한 개발 환경을 모두 설정하셨다면 터미널에서 `dotnet run --project MovieSearch`를 입력해 MovieSearch를 실행할 수 있습니다.
+개발 모드로 실행되는 도중에는 http://localhost:5013/swagger 에 접속하여 제공하고 있는 Web API를 확인할 수 있습니다.
 
-TODO: 일부 누락된 설명 채우기...
+만약 소스 코드를 수정할 때 자동으로 변경 사항을 반영하려면 각 IDE에서 제공하는 hot-reload 기능을 이용하거나
+터미널에서 `dotnet watch --project MovieSearch`를 입력하세요.
 
-## API 문서
+
+## 문서
 TODO
