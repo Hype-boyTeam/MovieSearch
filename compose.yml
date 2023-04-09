@@ -2,8 +2,6 @@ services:
   app:
     build: .
     restart: always
-    profiles:
-      - prod
     networks:
       - internal
 
