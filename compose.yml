@@ -6,7 +6,10 @@ services:
       - internal
 
   elastic_dev:
-    image: elasticsearch:8.6.2
+    build:
+      context: .
+      dockerfile: docker/ElasticNori.dockerfile
+    # image: elasticsearch:8.6.2
     # resart: on-failure
     profiles: ["dev"]
     environment:
