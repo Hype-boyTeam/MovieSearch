@@ -1,13 +1,23 @@
-name: Build
+name: build
 
 on:
   push:
+    branches:
+      - master
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      # - uses: actions/cache@v3
+      #   with:
+      #     # https://github.com/actions/cache/blob/main/examples.md#c---nuget
+      #     path: |
+      #       ~/.nuget/packages
+      #     key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-nuget-
       - name: Build
         run: |
           dotnet build --configuration Release
@@ -16,9 +26,28 @@ jobs:
           dotnet publish MovieSearch/MovieSearch.csproj \
           --configuration Release \
           --output bin
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: MovieSearch
-          path: bin/
-          retention-days: 1
+      # - name: Upload artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: MovieSearch
+      #     path: bin/
+      #     retention-days: 1
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ github.ref_name }} == 'master'
+    env:
+      DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE }}
+      DEPLOY_DEST: ${{ vars.DEPLOY_SSH_USER }}@${{ vars.DEPLOY_SSH_HOST }}
+      DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+    steps:
+      - name: deploy
+        run: |
+          mkdir -m700 ~/.ssh/
+          echo $DEPLOY_KNOWN_HOSTS >> ~/.ssh/known_hosts
+          echo $DEPLOY_KEY >> deploy_key_base64
+          cat deploy_key_base64 | tr -d ' ' | base64 -d > deploy_key
+          chmod 600 deploy_key
+          echo deploying to $DEPLOY_DEST
+          ssh -i deploy_key "$DEPLOY_DEST" "~/deploy_moviesearch.sh ${{ github.sha }}"
