@@ -1,7 +1,9 @@
 services:
   app:
     build: .
-    profiles: ["app"]
+    restart: always
+    profiles:
+      - prod
     networks:
       - internal
 
@@ -44,3 +46,4 @@ services:
 
 networks:
   internal:
+    external: true

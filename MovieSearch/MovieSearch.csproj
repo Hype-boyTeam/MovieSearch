@@ -6,17 +6,6 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-        <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
-    </PropertyGroup>
-    
-    <!-- 
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      
-    </PropertyGroup>
-    -->
-
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <PublishSingleFile>true</PublishSingleFile>
     </PropertyGroup>
 
     <ItemGroup>
