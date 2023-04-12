@@ -62,4 +62,10 @@ public class SearchController : ControllerBase
 
         return url;
     }
+
+    [HttpGet("test_deploy")]
+    public string TestStuff()
+    {
+        return "Hi";
+    }
 }
