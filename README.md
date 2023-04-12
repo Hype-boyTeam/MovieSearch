@@ -9,7 +9,9 @@ TODO: 설명, 검색기능 제공하는 서버
 - [postgres](https://www.postgresql.org) (예정?)
 
 위에 명시한 툴을 직접 설치하고 설정하는 과정을 생략할 수 있도록 간단한 [docker compose file](compose.yml)을 제공하고 있습니다.
-[Docker Desktop](https://docs.docker.com/desktop/install/windows-install/)을 설치한 다음 터미널에서 `docker compose --profile=dev up`를 입력하세요. 종료할 때는 Ctrl+C를 누르면 됩니다.
+1. [Docker Desktop](https://docs.docker.com/desktop/install/windows-install/)을 설치하세요.
+1. 터미널에서 `docker compose --profile=dev up`을 입력하세요.
+1. 종료할 때는 Ctrl+C를 누르면 됩니다.
 
 
 ### `appsettings.Development.json` 설정
@@ -29,6 +31,8 @@ TODO: 설명, 검색기능 제공하는 서버
 만약 소스 코드를 수정할 때 자동으로 변경 사항을 반영하려면 각 IDE에서 제공하는 hot-reload 기능을 이용하거나
 터미널에서 `dotnet watch --project MovieSearch`를 입력하세요.
 
+### 참고사항
+master 브랜치에 커밋된 코드는 빌드에 성공하면 자동으로 https://api.peru0.com 에 반영됩니다.
 
 ## 문서
 TODO
