@@ -12,7 +12,7 @@ services:
       dockerfile: docker/ElasticNori.dockerfile
     # image: elasticsearch:8.6.2
     # resart: on-failure
-    profiles: ["dev"]
+    profiles: ["dev", "release"]
     environment:
       ES_JAVA_OPTS: "-Xms256m -Xmx1024m"
       discovery.type: single-node
@@ -34,7 +34,7 @@ services:
   postgres_dev:
     image: postgres:15
     # restart: on-failure
-    profiles: ["dev"]
+    profiles: ["dev", "release"]
     environment:
       # Do NOT use this in production
       POSTGRES_USER: moviesearch
