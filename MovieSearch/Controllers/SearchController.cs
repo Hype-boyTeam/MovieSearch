@@ -66,6 +66,6 @@ public class SearchController : ControllerBase
     [HttpGet("test_deploy")]
     public string TestStuff()
     {
-        return "Hi";
+        return "Hi3";
     }
 }
