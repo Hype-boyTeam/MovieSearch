@@ -20,8 +20,8 @@ public class TestController : ControllerBase
         _elastic = elastic;
     }
     
-    [HttpGet("demo")]
-    public void string Demo()
+    [HttpGet("test")]
+    public string Demo()
     {
         return "asdf";
     }
