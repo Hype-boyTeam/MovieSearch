@@ -25,4 +25,10 @@ public class TestController : ControllerBase
     {
         return "asdf";
     }
+
+    [HttpGet("aaaa")]
+    public string Demo2()
+    {
+        return "asdf2";
+    }
 }
