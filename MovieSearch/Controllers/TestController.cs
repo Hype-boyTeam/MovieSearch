@@ -6,24 +6,23 @@ using MovieSearch.Models;
 namespace MovieSearch.Controllers;
 
 [ApiController]
-[Route("search")]
-public class SearchController : ControllerBase
+[Route("demo")]
+public class TestController : ControllerBase
 {
-    private readonly ILogger<SearchController> _logger;
+    private readonly ILogger<TestController> _logger;
     private readonly MovieDb _db;
     private readonly ElasticsearchClient _elastic;
 
-    public SearchController(ILogger<SearchController> logger, MovieDb db, ElasticsearchClient elastic)
+    public TestController(ILogger<TestController> logger, MovieDb db, ElasticsearchClient elastic)
     {
         _logger = logger;
         _db = db;
         _elastic = elastic;
     }
-
-    [HttpGet("text")]
-    public async Task<ActionResult> SearchByText(string query)
+    
+    [HttpGet("demo")]
+    public void string Demo()
     {
-        // TODO
-        return Ok();
+        return "asdf";
     }
 }
