@@ -43,9 +43,7 @@ services:
       - backend
     environment:
       # Do NOT use this in production
-      POSTGRES_USER: moviesearch
       POSTGRES_PASSWORD: password_testonly
-      POSTGRES_DB: moviesearch
 
   elastic_dev:
     build:

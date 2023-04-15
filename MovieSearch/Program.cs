@@ -41,16 +41,24 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
     
-    // Controller 실행 도중 잡지 못한 예외가 있다면 웹 페이지에 바로 오류 메시지가 노출되도록 설정 
-    app.UseDeveloperExceptionPage();
-    
-    // DB 초기화
+    app.UseDeveloperExceptionPage();    
     app.UseMigrationsEndPoint();
-    
-    using var scope = app.Services.CreateScope();
+}
+
+using (var scope = app.Services.CreateScope())
+{
     var dbContext = scope.ServiceProvider.GetRequiredService<MovieDb>();
-    dbContext.Database.EnsureCreated();
     
+    if (app.Environment.IsDevelopment())
+    {
+        dbContext.Database.EnsureCreated();
+    }
+
+    if (app.Environment.IsProduction())
+    {
+        // NOTE: 단일 서버니 감수할 수 있음
+        dbContext.Database.Migrate();
+    }
 }
 
 app.UseHttpsRedirection();
