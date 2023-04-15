@@ -56,7 +56,6 @@ using (var scope = app.Services.CreateScope())
 
     if (app.Environment.IsProduction())
     {
-        // NOTE: 단일 서버니 감수할 수 있음
         dbContext.Database.Migrate();
     }
 }
