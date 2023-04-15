@@ -11,6 +11,7 @@ services:
       - postgres_release
     volumes:
       - ./appsettings.json:/app/appsettings.json/:ro
+      - es_data:/usr/share/elasticsearch/data
 
   elastic_release:
     build:
@@ -44,6 +45,8 @@ services:
     environment:
       # Do NOT use this in production
       POSTGRES_PASSWORD: password_testonly
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   elastic_dev:
     build:
@@ -84,3 +87,7 @@ networks:
   backend:
   web:
     external: true
+
+volumes:
+  postgres_data:
+  es_data:
