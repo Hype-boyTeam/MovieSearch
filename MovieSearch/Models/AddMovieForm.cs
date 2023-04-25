@@ -25,7 +25,7 @@ public record AddMovieForm
     /// <summary>
     /// 포스터 이미지 파일
     /// </summary>
-    public IFormFile? Poster { get; set; }
+    public required IFormFile Poster { get; set; }
 
     /// <summary>
     /// 자막 파일

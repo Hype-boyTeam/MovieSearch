@@ -57,43 +57,40 @@ public class InternalController : ControllerBase
             ReleasedAt = form.ReleasedAt,
             Director = form.Director,
         };
-        
 
-        // 포스터도 같이 업로드 했다면 첨부
-        if (form.Poster != null)
+        if (form.Poster.ContentType != "image/png")
         {
-            if (form.Poster.ContentType != "image/png")
-            {
-                _logger.LogWarning("TODO: should we reject {FileName} as it has {Type}?", form.Poster.FileName, form.Poster.ContentType);
-            }
-            
-            _logger.LogInformation(
-                "Uploading the poster for {Name} ({Id}, {ImageSize}bytes)",
-                form.Name,
-                movieId,
-                form.Poster.Length
-            );
-
-            // 포스터 업로드
-            var filename = $"posters/{movieId}.png";
-            var blob = _blobContainer.GetBlobClient(filename);
-            await blob.UploadAsync(form.Poster.OpenReadStream(), new BlobUploadOptions
-            {
-                HttpHeaders = new BlobHttpHeaders
-                {
-                    // TODO: png만?
-                    ContentType = "image/png"
-                }
-            });
-            
-            _logger.LogInformation("Uploaded the poster for {Id} ({Url})", movieId, blob.Uri);
-            
-            movieRecord.PosterUrl = blob.Uri.ToString();
+            _logger.LogWarning("TODO: should we reject {FileName} as it has {Type}?", form.Poster.FileName,
+                form.Poster.ContentType);
         }
+
+        _logger.LogInformation(
+            "Uploading the poster for {Name} ({Id}, {ImageSize}bytes)",
+            form.Name,
+            movieId,
+            form.Poster.Length
+        );
+
+        // 포스터 업로드
+        var filename = $"posters/{movieId}.png";
+        var blob = _blobContainer.GetBlobClient(filename);
+        await blob.UploadAsync(form.Poster.OpenReadStream(), new BlobUploadOptions
+        {
+            HttpHeaders = new BlobHttpHeaders
+            {
+                // TODO: png만?
+                ContentType = "image/png"
+            }
+        });
+
+        _logger.LogInformation("Uploaded the poster for {Id} ({Url})", movieId, blob.Uri);
+
+        movieRecord.PosterUrl = blob.Uri.ToString();
+
 
         _db.Infos.Add(movieRecord);
         await _db.SaveChangesAsync();
-        
+
         return Ok();
     }
 
