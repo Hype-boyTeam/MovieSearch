@@ -6,6 +6,7 @@ using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MovieSearch.Models;
 
 namespace MovieSearch.Controllers;
@@ -16,17 +17,19 @@ public class SearchController : ControllerBase
     private const string IndexName = "subtitle";
 
     private readonly ILogger<SearchController> _logger;
+    private readonly MovieDb _db;
     private readonly ElasticsearchClient _elastic;
 
-    public SearchController(ILogger<SearchController> logger, ElasticsearchClient elastic)
+    public SearchController(ILogger<SearchController> logger, MovieDb db, ElasticsearchClient elastic)
     {
         _logger = logger;
+        _db = db;
         _elastic = elastic;
     }
 
+
     [HttpGet("/search")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<MovieDocument>>> SearchText(string text)
+    public async Task<ActionResult<List<MovieInfo>>> SearchText(string text)
     {
         var request = new SearchRequest(IndexName)
         {
@@ -39,13 +42,17 @@ public class SearchController : ControllerBase
         };
 
         var response = await _elastic.SearchAsync<MovieDocument>(request);
-
-        if (!response.IsValidResponse)
+        
+        if (!response.IsSuccess())
         {
-            _logger.LogError("failed to search {Text}: {Reason}", text, response.DebugInformation);
+            _logger.LogError("Failed to search {Text}: {Reason}", text, response.DebugInformation);
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        return response.Documents.ToList();
+        var ids = response.Documents.Select(x => x.Id).ToArray();
+
+        return await _db.Infos
+            .Where(x => ids.Contains(x.Id))
+            .ToListAsync();;
     }
 }

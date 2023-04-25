@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
 using Microsoft.EntityFrameworkCore;
@@ -7,13 +9,15 @@ using MovieSearch.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Azure Blob Storage 설정
 var blobStorage = new BlobContainerClient(builder.Configuration.GetConnectionString("BlobStorage"), "movieimage");
+await blobStorage.CreateIfNotExistsAsync(PublicAccessType.Blob);
 builder.Services.AddSingleton(blobStorage);
 
 // Elasticsearch 설정

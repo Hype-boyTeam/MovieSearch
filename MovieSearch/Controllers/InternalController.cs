@@ -1,10 +1,12 @@
 ﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Analysis;
 using Elastic.Clients.Elasticsearch.IndexManagement;
 using Elastic.Clients.Elasticsearch.Mapping;
 using Microsoft.AspNetCore.Mvc;
 using MovieSearch.Models;
+using UuidExtensions;
 
 namespace MovieSearch.Controllers;
 
@@ -22,14 +24,15 @@ public class InternalController : ControllerBase
     private readonly ILogger<InternalController> _logger;
     private readonly MovieDb _db;
     private readonly ElasticsearchClient _elastic;
-    private readonly BlobContainerClient _blob;
+    private readonly BlobContainerClient _blobContainer;
 
-    public InternalController(ILogger<InternalController> logger, MovieDb db, ElasticsearchClient elastic, BlobContainerClient blob)
+    public InternalController(ILogger<InternalController> logger, MovieDb db, ElasticsearchClient elastic,
+        BlobContainerClient blobContainer)
     {
         _logger = logger;
         _db = db;
         _elastic = elastic;
-        _blob = blob;
+        _blobContainer = blobContainer;
     }
 
     /// <summary>
@@ -39,18 +42,50 @@ public class InternalController : ControllerBase
     public async Task UploadMoviePosterTest(string name, IFormFile poster)
     {
         _logger.LogDebug("Uploading {Name} (size: {Size})", name, poster.Length);
-        await _blob.UploadBlobAsync(name, poster.OpenReadStream());
+        await _blobContainer.UploadBlobAsync(name, poster.OpenReadStream());
     }
-    
+
     [HttpPost]
-    public async Task AddMovie(string name, string detailUrl, DateTime? releasedAt, IFormFile? poster)
+    public async Task AddMovie([FromForm] AddMovieForm form)
     {
-        // _db.Infos.Add(new MovieInfo
-        // {
-        //     Name = name,
-        //     
-        // });
-        // await _db.SaveChangesAsync();
+        var movieId = Uuid7.Guid();
+        var movieRecord = new MovieInfo
+        {
+            Id = movieId,
+            Name = form.Name,
+            DetailsUrl = form.DetailsUrl,
+            ReleasedAt = form.ReleasedAt,
+            Director = form.Director,
+        };
+
+        if (form.Poster != null)
+        {
+            _logger.LogInformation(
+                "Uploading the poster for {Name} ({Id}, {ImageSize}bytes)",
+                form.Name,
+                movieId,
+                form.Poster.Length
+            );
+
+            // 포스터 업로드
+            var filename = $"posters/{movieId}.png";
+            var blob = _blobContainer.GetBlobClient(filename);
+            await blob.UploadAsync(BinaryData.FromStream(form.Poster.OpenReadStream()), new BlobUploadOptions
+            {
+                HttpHeaders = new BlobHttpHeaders
+                {
+                    // TODO: png만?
+                    ContentType = "image/png"
+                }
+            });
+            
+            _logger.LogInformation("Uploaded the poster for {Id} ({Url})", movieId, blob.Uri);
+            
+            movieRecord.PosterUrl = blob.Uri.ToString();
+        }
+
+        _db.Infos.Add(movieRecord);
+        await _db.SaveChangesAsync();
     }
 
     /// <summary>
@@ -116,7 +151,7 @@ public class InternalController : ControllerBase
         }
 
         _logger.LogInformation("Removed Elasticsearch indices");
-        
+
         return Ok();
     }
 }
