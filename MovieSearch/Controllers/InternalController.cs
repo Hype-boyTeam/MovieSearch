@@ -46,7 +46,7 @@ public class InternalController : ControllerBase
     }
 
     [HttpPost]
-    public async Task AddMovie([FromForm] AddMovieForm form)
+    public async Task<ActionResult> AddMovie([FromForm] AddMovieForm form)
     {
         var movieId = Uuid7.Guid();
         var movieRecord = new MovieInfo
@@ -57,9 +57,16 @@ public class InternalController : ControllerBase
             ReleasedAt = form.ReleasedAt,
             Director = form.Director,
         };
+        
 
+        // 포스터도 같이 업로드 했다면 첨부
         if (form.Poster != null)
         {
+            if (form.Poster.ContentType != "image/png")
+            {
+                _logger.LogWarning("TODO: should we reject {FileName} as it has {Type}?", form.Poster.FileName, form.Poster.ContentType);
+            }
+            
             _logger.LogInformation(
                 "Uploading the poster for {Name} ({Id}, {ImageSize}bytes)",
                 form.Name,
@@ -70,7 +77,7 @@ public class InternalController : ControllerBase
             // 포스터 업로드
             var filename = $"posters/{movieId}.png";
             var blob = _blobContainer.GetBlobClient(filename);
-            await blob.UploadAsync(BinaryData.FromStream(form.Poster.OpenReadStream()), new BlobUploadOptions
+            await blob.UploadAsync(form.Poster.OpenReadStream(), new BlobUploadOptions
             {
                 HttpHeaders = new BlobHttpHeaders
                 {
@@ -86,6 +93,8 @@ public class InternalController : ControllerBase
 
         _db.Infos.Add(movieRecord);
         await _db.SaveChangesAsync();
+        
+        return Ok();
     }
 
     /// <summary>

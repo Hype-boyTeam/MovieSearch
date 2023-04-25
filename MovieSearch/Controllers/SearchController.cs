@@ -27,7 +27,6 @@ public class SearchController : ControllerBase
         _elastic = elastic;
     }
 
-
     [HttpGet("/search")]
     public async Task<ActionResult<List<MovieInfo>>> SearchText(string text)
     {
