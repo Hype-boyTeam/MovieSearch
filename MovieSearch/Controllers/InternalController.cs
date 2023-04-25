@@ -89,11 +89,29 @@ public class InternalController : ControllerBase
         {
             ContentType = "application/xml"
         });
-        
+
         _db.Infos.Add(movieRecord);
         await _db.SaveChangesAsync();
-        
+
         // TODO: elastic에도 삽입?
+        // TODO: 지금 당장은 작동하기만 하면 족한 상황이지만.. 읽기 좋지 않은 코드를 정리할 필요가 있음
+        using var subtitleReader = new StreamReader(form.Subtitle.OpenReadStream());
+        var createRequest = new CreateRequest<MovieDocument>("subtitle", movieId)
+        {
+            Document = new MovieDocument
+            {
+                Id = movieId,
+                Name = form.Name,
+                Text = await subtitleReader.ReadToEndAsync(),
+            }
+        };
+        var createResponse = await _elastic.CreateAsync(createRequest);
+        if (!createResponse.IsSuccess())
+        {
+            _logger.LogError("Failed to create a document for movie {Id} ({Name}): {Debug}", movieId, form.Name,
+                createResponse.DebugInformation);
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
 
         return Ok();
     }
