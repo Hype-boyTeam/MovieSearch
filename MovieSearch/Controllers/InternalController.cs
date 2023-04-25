@@ -11,7 +11,7 @@ using UuidExtensions;
 namespace MovieSearch.Controllers;
 
 /// <summary>
-/// 내부 디버그 용도로 사용되는 API를 제공합니다. 
+/// 테스트 용도로 사용되는 API를 제공합니다. 
 /// </summary>
 /// <remarks>
 /// 실제 서비스 개발 시에는 이 API를 외부에 노출하지 않거나 인증이 필요하지만
@@ -72,24 +72,28 @@ public class InternalController : ControllerBase
         );
 
         // 포스터 업로드
-        var filename = $"posters/{movieId}.png";
-        var blob = _blobContainer.GetBlobClient(filename);
-        await blob.UploadAsync(form.Poster.OpenReadStream(), new BlobUploadOptions
+        var blob = _blobContainer.GetBlobClient($"posters/{movieId}.png");
+        await blob.UploadAsync(form.Poster.OpenReadStream(), new BlobHttpHeaders
         {
-            HttpHeaders = new BlobHttpHeaders
-            {
-                // TODO: png만?
-                ContentType = "image/png"
-            }
+            // TODO: png만?
+            ContentType = "image/png"
         });
 
         _logger.LogInformation("Uploaded the poster for {Id} ({Url})", movieId, blob.Uri);
 
         movieRecord.PosterUrl = blob.Uri.ToString();
 
-
+        // 자막 업로드 (테스트2)
+        var subtitleBlob = _blobContainer.GetBlobClient($"subtitles/{movieId}.xml");
+        await subtitleBlob.UploadAsync(form.Subtitle.OpenReadStream(), new BlobHttpHeaders
+        {
+            ContentType = "application/xml"
+        });
+        
         _db.Infos.Add(movieRecord);
         await _db.SaveChangesAsync();
+        
+        // TODO: elastic에도 삽입?
 
         return Ok();
     }
