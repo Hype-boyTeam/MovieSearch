@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,10 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Azure Blob Storage 설정
+var blobStorage = new BlobContainerClient(builder.Configuration.GetConnectionString("BlobStorage"), "movieima");
+builder.Services.AddSingleton(blobStorage);
 
 // Elasticsearch 설정
 var elasticSettings =
