@@ -3,7 +3,6 @@ using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Analysis;
 using Elastic.Clients.Elasticsearch.IndexManagement;
 using Elastic.Clients.Elasticsearch.Mapping;
-using Elastic.Clients.Elasticsearch.QueryDsl;
 using Microsoft.AspNetCore.Mvc;
 using MovieSearch.Models;
 
@@ -46,11 +45,12 @@ public class InternalController : ControllerBase
     [HttpPost]
     public async Task AddMovie(string name, string detailUrl, DateTime? releasedAt, IFormFile? poster)
     {
-        _db.Infos.Add(new MovieInfo
-        {
-            Name = name,
-        });
-        await _db.SaveChangesAsync();
+        // _db.Infos.Add(new MovieInfo
+        // {
+        //     Name = name,
+        //     
+        // });
+        // await _db.SaveChangesAsync();
     }
 
     /// <summary>

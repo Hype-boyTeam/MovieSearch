@@ -13,7 +13,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Azure Blob Storage 설정
-var blobStorage = new BlobContainerClient(builder.Configuration.GetConnectionString("BlobStorage"), "movieima");
+var blobStorage = new BlobContainerClient(builder.Configuration.GetConnectionString("BlobStorage"), "movieimage");
 builder.Services.AddSingleton(blobStorage);
 
 // Elasticsearch 설정
