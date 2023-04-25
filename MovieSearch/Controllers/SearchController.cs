@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,17 +28,17 @@ public class SearchController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<List<MovieDocument>>> SearchText(string text)
     {
-        var response = await _elastic.SearchAsync<MovieDocument>(s => s
-            .Index(IndexName)
-            .From(0)
-            .Size(10)
-            .Query(q => q
-                .Match(t => t
-                    .Field(f => f.Text)
-                    .Query(text)
-                )
-            )
-        );
+        var request = new SearchRequest(IndexName)
+        {
+            From = 0,
+            Size = 30,
+            Query = new MatchQuery(Infer.Field<MovieDocument>(f => f.Text))
+            {
+                Query = text
+            }
+        };
+
+        var response = await _elastic.SearchAsync<MovieDocument>(request);
 
         if (!response.IsValidResponse)
         {
