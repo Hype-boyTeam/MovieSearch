@@ -48,6 +48,8 @@ public class SearchController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
+        _logger.LogDebug("Searched {Query} ({Count} entries)", text, response.Documents.Count);
+        
         var ids = response.Documents.Select(x => x.Id).ToArray();
 
         return await _db.Infos

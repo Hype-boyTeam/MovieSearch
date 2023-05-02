@@ -35,16 +35,6 @@ public class InternalController : ControllerBase
         _blobContainer = blobContainer;
     }
 
-    /// <summary>
-    /// Azure Blob Storage에 파일을 업로드 합니다. (테스트 용)
-    /// </summary>
-    [HttpPost]
-    public async Task UploadMoviePosterTest(string name, IFormFile poster)
-    {
-        _logger.LogDebug("Uploading {Name} (size: {Size})", name, poster.Length);
-        await _blobContainer.UploadBlobAsync(name, poster.OpenReadStream());
-    }
-
     [HttpPost]
     public async Task<ActionResult> AddMovie([FromForm] AddMovieForm form)
     {
