@@ -2,6 +2,7 @@
 
 namespace MovieSearch.Models;
 
+// WTF
 public class MovieDb : DbContext
 {
     public MovieDb(DbContextOptions<MovieDb> options) : base(options) { }
