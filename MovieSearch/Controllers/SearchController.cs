@@ -59,16 +59,20 @@ public class SearchController : ControllerBase
         // Go bullshit go
         if (text.Contains("묻고"))
         {
-            var bullshit = await _db.Infos.Where(x => x.Name == "타짜").SingleAsync();
-            searchResults.Add(bullshit);
-            searchResults.Reverse();
+            var bullshit = await _db.Infos.Where(x => x.Name == "타짜").SingleAsync(); 
+            searchResults = new List<MovieInfo>()
+            {
+                bullshit
+            };
         }
 
         if (text.Contains("살려는"))
         {
             var bullshit = await _db.Infos.Where(x => x.Name == "신세계").SingleAsync();
-            searchResults.Add(bullshit);
-            searchResults.Reverse();
+            searchResults = new List<MovieInfo>()
+            {
+                bullshit
+            };
         }
         
 
