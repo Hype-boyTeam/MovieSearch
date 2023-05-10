@@ -31,4 +31,6 @@ public record AddMovieForm
     /// 자막 파일
     /// </summary>
     public required IFormFile Subtitle { get; set; }
+    
+    public int RunningTime { get; set; }
 }

@@ -46,6 +46,7 @@ public class InternalController : ControllerBase
             DetailsUrl = form.DetailsUrl,
             ReleasedAt = form.ReleasedAt,
             Director = form.Director,
+            RunningTime = form.RunningTime,
         };
 
         if (form.Poster.ContentType != "image/png")
