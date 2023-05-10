@@ -52,8 +52,24 @@ public class SearchController : ControllerBase
         
         var ids = response.Documents.Select(x => x.Id).ToArray();
 
-        return await _db.Infos
+        var searchResults = await _db.Infos
             .Where(x => ids.Contains(x.Id))
-            .ToListAsync();;
+            .ToListAsync();
+
+        // Go bullshit go
+        if (text.Contains("묻고 더블로 가"))
+        {
+            var bullshit = await _db.Infos.Where(x => x.Name == "타짜").SingleAsync();
+            searchResults.Add(bullshit);
+        }
+
+        if (text.Contains("살려는"))
+        {
+            var bullshit = await _db.Infos.Where(x => x.Name == "신세계").SingleAsync();
+            searchResults.Add(bullshit);
+        }
+        
+
+        return searchResults;
     }
 }
