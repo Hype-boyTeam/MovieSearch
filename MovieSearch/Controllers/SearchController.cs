@@ -33,7 +33,7 @@ public class SearchController : ControllerBase
         var request = new SearchRequest(IndexName)
         {
             From = 0,
-            Size = 30,
+            Size = 5,
             Query = new MatchQuery(Infer.Field<MovieDocument>(f => f.Text))
             {
                 Query = text
