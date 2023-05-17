@@ -8,6 +8,9 @@ using MovieSearch.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// MovieSearch
+builder.Services.AddScoped<MovieService>();
+
 // Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase);

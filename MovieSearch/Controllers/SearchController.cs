@@ -14,68 +14,28 @@ namespace MovieSearch.Controllers;
 [ApiController]
 public class SearchController : ControllerBase
 {
-    private const string IndexName = "subtitle";
-
     private readonly ILogger<SearchController> _logger;
-    private readonly MovieDb _db;
-    private readonly ElasticsearchClient _elastic;
+    private readonly MovieService _movieService;
 
-    public SearchController(ILogger<SearchController> logger, MovieDb db, ElasticsearchClient elastic)
+    public SearchController(ILogger<SearchController> logger, MovieService movieService)
     {
         _logger = logger;
-        _db = db;
-        _elastic = elastic;
+        _movieService = movieService;
     }
 
     [HttpGet("/search")]
-    public async Task<ActionResult<List<MovieInfo>>> SearchText(string text)
+    [ProducesResponseType(typeof(IList<MovieInfo>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SearchText(string text)
     {
-        var request = new SearchRequest(IndexName)
+        if (!ModelState.IsValid)
         {
-            From = 0,
-            Size = 5,
-            Query = new MatchQuery(Infer.Field<MovieDocument>(f => f.Text))
-            {
-                Query = text
-            }
-        };
-
-        var response = await _elastic.SearchAsync<MovieDocument>(request);
-        
-        if (!response.IsSuccess())
-        {
-            _logger.LogError("Failed to search {Text}: {Reason}", text, response.DebugInformation);
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return BadRequest(ModelState);
         }
 
-        _logger.LogDebug("Searched {Query} ({Count} entries)", text, response.Documents.Count);
-        
-        var ids = response.Documents.Select(x => x.Id).ToArray();
+        var movieId = await _movieService.SearchMovies(text);
+        var movieInfo = await _movieService.GetDetails(movieId);
 
-        var searchResults = await _db.Infos
-            .Where(x => ids.Contains(x.Id))
-            .ToListAsync();
-
-        // Go bullshit go
-        if (text.Contains("묻고"))
-        {
-            var bullshit = await _db.Infos.Where(x => x.Name == "타짜").SingleAsync(); 
-            searchResults = new List<MovieInfo>()
-            {
-                bullshit
-            };
-        }
-
-        if (text.Contains("살려는"))
-        {
-            var bullshit = await _db.Infos.Where(x => x.Name == "신세계").SingleAsync();
-            searchResults = new List<MovieInfo>()
-            {
-                bullshit
-            };
-        }
-        
-
-        return searchResults;
+        return Ok(movieInfo);
     }
 }
