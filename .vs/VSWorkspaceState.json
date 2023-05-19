@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\.github",
+    "\\docker",
+    "\\MovieSearch",
+    "\\MovieSearch\\Controllers",
+    "\\MovieSearch\\Migrations",
+    "\\MovieSearch\\Models"
+  ],
+  "SelectedNode": "\\MovieSearch\\Controllers\\InternalController.cs",
+  "PreviewInSolutionExplorer": false
+}

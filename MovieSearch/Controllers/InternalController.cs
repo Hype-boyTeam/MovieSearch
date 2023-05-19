@@ -1,4 +1,4 @@
-﻿using Azure.Storage.Blobs;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Analysis;
@@ -7,6 +7,9 @@ using Elastic.Clients.Elasticsearch.Mapping;
 using Microsoft.AspNetCore.Mvc;
 using MovieSearch.Models;
 using UuidExtensions;
+using System.Xml;
+using Nest;
+using Microsoft.AspNetCore.Identity;
 
 namespace MovieSearch.Controllers;
 
@@ -113,38 +116,60 @@ public class InternalController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> SetupElasticIndex()
     {
-        var request = new CreateIndexRequest("subtitle")
+        // XML문서 로드
+        XmlDocument doc = new XmlDocument();
+        doc.LoadXml(xmlString);
+
+        // 필요한 요소와 속성에 접근하여 추출
+        XmlNodeList nodeList = doc.GetElementsByTagName("p");
+        foreach (XmlNode node in nodeList)
         {
-            Settings = new IndexSettings
+            string id = node.Attributes["xml:id"].Value; //속성 추출
+            string content = node.InnerText; //내용 추출
+
+            //한글만 추출
+            string koreaOnly = string.Concat(content.Where(c => char.IsWhiteSpace(c) || char.IsLetter(c) && new
+            System.Globalization.CultureInfo("ko=KR").CompareInfo.IsSortable(c.ToString())));
+
+            var request = new CreateIndexRequest("subtitle")
             {
-                Analysis = new IndexSettingsAnalysis
+                Settings = new IndexSettings
                 {
-                    Analyzers = new Analyzers
+                    Analysis = new IndexSettingsAnalysis
+                    {
+                        Analyzers = new Analyzers
                     {
                         {"moviesearch_custom", new NoriAnalyzer()}
+                    },
+                        Normalizers = new Normalizers
+                    {
+                        {"my_normalizer",new CustomNormalizer{ CharFilter = new[] {"html_strip"} }}
                     }
-                    // TODO: strip html
-                }
-            },
-            Mappings = new TypeMapping
-            {
-                Properties = new Properties<MovieDocument>
+                    }// TODO: strip html 
+                },
+                Mappings = new TypeMapping
+                {
+                    Properties = new Properties<MovieDocument>
                 {
                     {
                         x => x.Text, new TextProperty
                         {
-                            Analyzer = "moviesearch_custom"
+                            Analyzer = "moviesearch_custom",
+                            Normalizer = "my_normalizer"
                         }
                     },
                     {
                         x => x.Name, new TextProperty
                         {
-                            Analyzer = "moviesearch_custom"
+                            Analyzer = "moviesearch_custom",
+                            Normalizer = "my_normalizer"
                         }
                     }
                 }
-            }
-        };
+              }
+            };
+        }
+    }
 
         var response = await _elastic.Indices.CreateAsync(request);
 
