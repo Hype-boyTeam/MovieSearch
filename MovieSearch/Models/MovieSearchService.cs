@@ -26,7 +26,7 @@ public sealed class MovieSearchService
         {
             Document = document
         };
-        
+
         var createResponse = await _elastic.CreateAsync(createRequest);
         if (!createResponse.IsSuccess())
         {
@@ -71,7 +71,20 @@ public sealed class MovieSearchService
                 $"Elasticsearch unexpectedly returned an error: {response.DebugInformation}");
         }
 
-        _logger.LogDebug("Searched {Query} ({Count} entries)", text, response.Documents.Count);
+        _logger.LogInformation("Searched {Query} ({Count} entries)", text, response.Documents.Count);
+        if (_logger.IsEnabled(LogLevel.Trace))
+        {
+            foreach (var searchHit in response.Hits)
+            {
+                if (searchHit.Source == null)
+                {
+                    continue;
+                }
+
+                _logger.LogTrace("Id={Id}, Name={Name}, Score={Score:F3}", searchHit.Id, searchHit.Source.Name,
+                    searchHit.Score ?? -1);
+            }
+        }
 
         return response.Documents
             .Select(x => x.Id)

@@ -1,5 +1,4 @@
-﻿using Elastic.Clients.Elasticsearch;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace MovieSearch.Models;
 
