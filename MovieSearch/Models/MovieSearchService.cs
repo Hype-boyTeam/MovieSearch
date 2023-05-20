@@ -102,7 +102,11 @@ public sealed class MovieSearchService
                     Analyzers = new Analyzers
                     {
                         {"moviesearch_custom", new NoriAnalyzer()}
-                    }
+                    },
+                    CharFilters = new CharFilters
+                    {
+                        {"moviesearch_filter", new HtmlStripCharFilter()}
+                    },
                 }
             },
             Mappings = new TypeMapping
@@ -112,7 +116,7 @@ public sealed class MovieSearchService
                     {
                         x => x.Text, new TextProperty
                         {
-                            Analyzer = "moviesearch_custom"
+                            Analyzer = "moviesearch_custom",
                         }
                     },
                     {
