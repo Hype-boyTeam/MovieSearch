@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.QueryDsl;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using MovieSearch.Models;
 
 namespace MovieSearch.Controllers;
@@ -14,68 +6,31 @@ namespace MovieSearch.Controllers;
 [ApiController]
 public class SearchController : ControllerBase
 {
-    private const string IndexName = "subtitle";
-
     private readonly ILogger<SearchController> _logger;
-    private readonly MovieDb _db;
-    private readonly ElasticsearchClient _elastic;
+    private readonly MovieInfoService _movieInfoService;
+    private readonly MovieSearchService _movieSearchService;
 
-    public SearchController(ILogger<SearchController> logger, MovieDb db, ElasticsearchClient elastic)
+    public SearchController(ILogger<SearchController> logger, MovieInfoService movieInfoService,
+        MovieSearchService movieSearchService)
     {
         _logger = logger;
-        _db = db;
-        _elastic = elastic;
+        _movieInfoService = movieInfoService;
+        _movieSearchService = movieSearchService;
     }
 
     [HttpGet("/search")]
-    public async Task<ActionResult<List<MovieInfo>>> SearchText(string text)
+    [ProducesResponseType(typeof(IList<MovieInfo>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SearchText(string text)
     {
-        var request = new SearchRequest(IndexName)
+        if (!ModelState.IsValid)
         {
-            From = 0,
-            Size = 5,
-            Query = new MatchQuery(Infer.Field<MovieDocument>(f => f.Text))
-            {
-                Query = text
-            }
-        };
-
-        var response = await _elastic.SearchAsync<MovieDocument>(request);
-        
-        if (!response.IsSuccess())
-        {
-            _logger.LogError("Failed to search {Text}: {Reason}", text, response.DebugInformation);
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return BadRequest(ModelState);
         }
 
-        _logger.LogDebug("Searched {Query} ({Count} entries)", text, response.Documents.Count);
-        
-        var ids = response.Documents.Select(x => x.Id).ToArray();
+        var movieIdList = await _movieSearchService.FindMovies(text);
+        var movieInfo = await _movieInfoService.GetDetails(movieIdList);
 
-        var searchResults = await _db.Infos
-            .Where(x => ids.Contains(x.Id))
-            .ToListAsync();
-
-        // Go bullshit go
-        if (text.Contains("묻고"))
-        {
-            var bullshit = await _db.Infos.Where(x => x.Name == "타짜").SingleAsync(); 
-            searchResults = new List<MovieInfo>()
-            {
-                bullshit
-            };
-        }
-
-        if (text.Contains("살려는"))
-        {
-            var bullshit = await _db.Infos.Where(x => x.Name == "신세계").SingleAsync();
-            searchResults = new List<MovieInfo>()
-            {
-                bullshit
-            };
-        }
-        
-
-        return searchResults;
+        return Ok(movieInfo);
     }
 }
