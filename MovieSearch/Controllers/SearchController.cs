@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.QueryDsl;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using MovieSearch.Models;
 
 namespace MovieSearch.Controllers;
@@ -15,12 +7,15 @@ namespace MovieSearch.Controllers;
 public class SearchController : ControllerBase
 {
     private readonly ILogger<SearchController> _logger;
-    private readonly MovieService _movieService;
+    private readonly MovieInfoService _movieInfoService;
+    private readonly MovieSearchService _movieSearchService;
 
-    public SearchController(ILogger<SearchController> logger, MovieService movieService)
+    public SearchController(ILogger<SearchController> logger, MovieInfoService movieInfoService,
+        MovieSearchService movieSearchService)
     {
         _logger = logger;
-        _movieService = movieService;
+        _movieInfoService = movieInfoService;
+        _movieSearchService = movieSearchService;
     }
 
     [HttpGet("/search")]
@@ -33,8 +28,8 @@ public class SearchController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var movieId = await _movieService.SearchMovies(text);
-        var movieInfo = await _movieService.GetDetails(movieId);
+        var movieIdList = await _movieSearchService.FindMovies(text);
+        var movieInfo = await _movieInfoService.GetDetails(movieIdList);
 
         return Ok(movieInfo);
     }

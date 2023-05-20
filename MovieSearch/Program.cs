@@ -8,8 +8,10 @@ using MovieSearch.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// MovieSearch
-builder.Services.AddScoped<MovieService>();
+// Add MovieSearch related services
+builder.Services.AddScoped<PosterService>();
+builder.Services.AddScoped<MovieInfoService>();
+builder.Services.AddScoped<MovieSearchService>();
 
 // Add services to the container.
 builder.Services.AddControllers()

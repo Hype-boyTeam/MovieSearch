@@ -1,6 +1,4 @@
-﻿using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
-using Elastic.Clients.Elasticsearch;
+﻿using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Analysis;
 using Elastic.Clients.Elasticsearch.IndexManagement;
 using Elastic.Clients.Elasticsearch.Mapping;
@@ -22,24 +20,33 @@ namespace MovieSearch.Controllers;
 public class InternalController : ControllerBase
 {
     private readonly ILogger<InternalController> _logger;
-    private readonly MovieDb _db;
-    private readonly ElasticsearchClient _elastic;
-    private readonly BlobContainerClient _blobContainer;
+    private readonly PosterService _posterService;
+    private readonly MovieInfoService _movieInfoService;
+    private readonly MovieSearchService _movieSearchService;
 
-    public InternalController(ILogger<InternalController> logger, MovieDb db, ElasticsearchClient elastic,
-        BlobContainerClient blobContainer)
+    public InternalController(ILogger<InternalController> logger, PosterService posterService,
+        MovieInfoService movieInfoService, MovieSearchService movieSearchService)
     {
         _logger = logger;
-        _db = db;
-        _elastic = elastic;
-        _blobContainer = blobContainer;
+        _posterService = posterService;
+        _movieInfoService = movieInfoService;
+        _movieSearchService = movieSearchService;
     }
 
     [HttpPost]
-    public async Task<ActionResult> AddMovie([FromForm] AddMovieForm form)
+    public async Task<IActionResult> AddMovie([FromForm] AddMovieForm form)
     {
         var movieId = Uuid7.Guid();
-        var movieRecord = new MovieInfo
+
+        // 자막 파일 읽기
+        using var subtitleReader = new StreamReader(form.Subtitle.OpenReadStream());
+        var subtitle = await subtitleReader.ReadToEndAsync();
+
+        // 포스터 이미지를 업로드
+        var posterUri = await _posterService.UploadImage(movieId, form.Poster);
+
+        // 영화 정보 추가
+        var movieInfo = new MovieInfo
         {
             Id = movieId,
             Name = form.Name,
@@ -47,62 +54,18 @@ public class InternalController : ControllerBase
             ReleasedAt = form.ReleasedAt,
             Director = form.Director,
             RunningTime = form.RunningTime,
+            PosterUrl = posterUri.ToString(),
         };
+        await _movieInfoService.AddMovie(movieInfo);
 
-        if (form.Poster.ContentType != "image/png")
+        // 영화 검색 인덱스 추가
+        var document = new MovieDocument
         {
-            _logger.LogWarning("TODO: should we reject {FileName} as it has {Type}?", form.Poster.FileName,
-                form.Poster.ContentType);
-        }
-
-        _logger.LogInformation(
-            "Uploading the poster for {Name} ({Id}, {ImageSize}bytes)",
-            form.Name,
-            movieId,
-            form.Poster.Length
-        );
-
-        // 포스터 업로드
-        var blob = _blobContainer.GetBlobClient($"posters/{movieId}.png");
-        await blob.UploadAsync(form.Poster.OpenReadStream(), new BlobHttpHeaders
-        {
-            // TODO: png만?
-            ContentType = "image/png"
-        });
-
-        _logger.LogInformation("Uploaded the poster for {Id} ({Url})", movieId, blob.Uri);
-
-        movieRecord.PosterUrl = blob.Uri.ToString();
-
-        // 자막 업로드 (테스트2)
-        var subtitleBlob = _blobContainer.GetBlobClient($"subtitles/{movieId}.xml");
-        await subtitleBlob.UploadAsync(form.Subtitle.OpenReadStream(), new BlobHttpHeaders
-        {
-            ContentType = "application/xml"
-        });
-
-        _db.Infos.Add(movieRecord);
-        await _db.SaveChangesAsync();
-
-        // TODO: elastic에도 삽입?
-        // TODO: 지금 당장은 작동하기만 하면 족한 상황이지만.. 읽기 좋지 않은 코드를 정리할 필요가 있음
-        using var subtitleReader = new StreamReader(form.Subtitle.OpenReadStream());
-        var createRequest = new CreateRequest<MovieDocument>("subtitle", movieId)
-        {
-            Document = new MovieDocument
-            {
-                Id = movieId,
-                Name = form.Name,
-                Text = await subtitleReader.ReadToEndAsync(),
-            }
+            Id = movieId,
+            Name = form.Name,
+            Text = subtitle,
         };
-        var createResponse = await _elastic.CreateAsync(createRequest);
-        if (!createResponse.IsSuccess())
-        {
-            _logger.LogError("Failed to create a document for movie {Id} ({Name}): {Debug}", movieId, form.Name,
-                createResponse.DebugInformation);
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
+        await _movieSearchService.AddSubtitle(document);
 
         return Ok();
     }
@@ -111,66 +74,16 @@ public class InternalController : ControllerBase
     /// Moviesearch 동작에 필요한 Elasticsearch 인덱스를 생성합니다.
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult> SetupElasticIndex()
+    public async Task<IActionResult> SetupElasticIndex()
     {
-        var request = new CreateIndexRequest("subtitle")
-        {
-            Settings = new IndexSettings
-            {
-                Analysis = new IndexSettingsAnalysis
-                {
-                    Analyzers = new Analyzers
-                    {
-                        {"moviesearch_custom", new NoriAnalyzer()}
-                    }
-                    // TODO: strip html
-                }
-            },
-            Mappings = new TypeMapping
-            {
-                Properties = new Properties<MovieDocument>
-                {
-                    {
-                        x => x.Text, new TextProperty
-                        {
-                            Analyzer = "moviesearch_custom"
-                        }
-                    },
-                    {
-                        x => x.Name, new TextProperty
-                        {
-                            Analyzer = "moviesearch_custom"
-                        }
-                    }
-                }
-            }
-        };
-
-        var response = await _elastic.Indices.CreateAsync(request);
-
-        if (!response.IsSuccess())
-        {
-            _logger.LogError("Failed to create Elasticsearch indices: {Debug}", response.DebugInformation);
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
-
-        _logger.LogInformation("Created Elasticsearch indices");
-
+        await _movieSearchService.CreateIndex();
         return Ok();
     }
 
     [HttpDelete]
-    public async Task<ActionResult> DeleteElasticIndex()
+    public async Task<IActionResult> DeleteElasticIndex()
     {
-        var response = await _elastic.Indices.DeleteAsync("subtitle");
-        if (!response.IsSuccess())
-        {
-            _logger.LogError("Failed to remove elastic indices: {Debug}", response.DebugInformation);
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
-
-        _logger.LogInformation("Removed Elasticsearch indices");
-
+        await _movieSearchService.DeleteIndex();
         return Ok();
     }
 }
