@@ -68,7 +68,7 @@ public sealed class MovieSearchService
             Size = limit,
             Query = new MatchQuery(Infer.Field<MovieDocument>(f => f.Text))
             {
-                Query = text
+                Query = KoreanText
             }
         };
 
