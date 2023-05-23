@@ -1,9 +1,11 @@
-﻿using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Analysis;
 using Elastic.Clients.Elasticsearch.Core.Search;
 using Elastic.Clients.Elasticsearch.IndexManagement;
 using Elastic.Clients.Elasticsearch.Mapping;
 using Elastic.Clients.Elasticsearch.QueryDsl;
+using System.Text.RegularExpressions;
+
 
 namespace MovieSearch.Models;
 
@@ -36,6 +38,13 @@ public sealed class MovieSearchService
                 $"Failed to create an index for {document.Name}: {createResponse.DebugInformation}");
         }
     }
+    public async Task<string> ExtractKoreanTextFromXml(string xmlText)
+    {
+        string koreanText = Regex.Replace(xmlText, "<.*?>", string.Empty);
+        koreanText = Regex.Replace(koreanText, @"[^가-힣\s]", string.Empty);
+
+        return koreanText;
+    }
 
     /// <summary>
     /// 주어진 <paramref name="text"/>가 나온 적이 있는 영화를 검색합니다.
@@ -52,6 +61,7 @@ public sealed class MovieSearchService
     /// </returns>
     public async Task<IList<Guid>> FindMovies(string text, int limit = 10)
     {
+        string KoreanText = await ExtractKoreanTextFromXml(text);
         var request = new SearchRequest(IndexName)
         {
             From = 0,
@@ -152,4 +162,7 @@ public sealed class MovieSearchService
 
         _logger.LogInformation("Removed Elasticsearch indices");
     }
+   
 }
+
+
