@@ -29,8 +29,18 @@ public class MovieInfoService
     /// <param name="movieId">조회할 영화 id의 목록입니다.</param>
     public async Task<IList<MovieInfo>> GetDetails(IList<Guid> movieId)
     {
-        return await _db.Infos
+        var list = await _db.Infos
             .Where(x => movieId.Contains(x.Id))
             .ToListAsync();
+
+        list.Sort((x, y) =>
+        {
+            var xIndex = movieId.IndexOf(x.Id);
+            var yIndex = movieId.IndexOf(y.Id);
+
+            return xIndex.CompareTo(yIndex);
+        });
+
+        return list;
     }
 }
