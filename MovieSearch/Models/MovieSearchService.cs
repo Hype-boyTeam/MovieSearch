@@ -100,12 +100,21 @@ public sealed class MovieSearchService
             {
                 Analysis = new IndexSettingsAnalysis
                 {
+                    Tokenizers = new Tokenizers
+                    {
+                        {
+                            "nori_none", new NoriTokenizer
+                            {
+                                DecompoundMode = NoriDecompoundMode.None,
+                            }
+                        }
+                    },
                     Analyzers = new Analyzers
                     {
                         {
                             "moviesearch_custom", new CustomAnalyzer
                             {
-                                Tokenizer = "nori_tokenizer",
+                                Tokenizer = "nori_none",
                                 CharFilter = new[] {"html_strip"},
                             }
                         }
