@@ -59,7 +59,7 @@ public sealed class MovieSearchService
     /// <paramref name="text"/>가 나온 적이 있는 영화의 id 목록입니다.
     /// 가장 관련성이 높은 것이 앞에 배치됩니다.
     /// </returns>
-    public async Task<IList<Guid>> FindMovies(string text, int limit = 10)
+    public async Task<IList<Guid>> FindMovies(string text, int limit = 1000)
     {
         string KoreanText = await ExtractKoreanTextFromXml(text);
         var request = new SearchRequest(IndexName)
