@@ -54,7 +54,7 @@ public sealed class MovieSearchService
     /// <paramref name="text"/>가 나온 적이 있는 영화의 id 목록입니다.
     /// 가장 관련성이 높은 것이 앞에 배치됩니다.
     /// </returns>
-    public async Task<IList<Guid>> FindMovies(string text, int limit = 30, float minimumScore = 1.0f)
+    public async Task<IList<Guid>> FindMovies(string text, int limit = 30, float minimumScore = 0.0f)
     {
         // 제목은 가중치 3배수
         var titleField = Infer.Field<MovieDocument>(f => f.Name, 3.0d);
@@ -67,7 +67,8 @@ public sealed class MovieSearchService
             Query = new MultiMatchQuery
             {
                 Query = text,
-                Fields = titleField.And(textField),
+                Type = TextQueryType.Phrase,
+                Fields = textField.And(titleField),
             },
             MinScore = minimumScore,
         };
@@ -114,7 +115,7 @@ public sealed class MovieSearchService
                         {
                             "nori_custom", new NoriTokenizer
                             {
-                                // DecompoundMode = NoriDecompoundMode.Mixed,
+                                DecompoundMode = NoriDecompoundMode.Mixed,
                             }
                         }
                     },
@@ -124,7 +125,7 @@ public sealed class MovieSearchService
                             "moviesearch_custom", new CustomAnalyzer
                             {
                                 Tokenizer = "nori_custom",
-                                CharFilter = new[] {"html_strip"},
+                                // CharFilter = new[] {"html_strip"},
                             }
                         }
                     },
