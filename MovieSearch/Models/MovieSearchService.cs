@@ -112,9 +112,9 @@ public sealed class MovieSearchService
                     Tokenizers = new Tokenizers
                     {
                         {
-                            "nori_none", new NoriTokenizer
+                            "nori_custom", new NoriTokenizer
                             {
-                                DecompoundMode = NoriDecompoundMode.Mixed,
+                                // DecompoundMode = NoriDecompoundMode.Mixed,
                             }
                         }
                     },
@@ -123,7 +123,7 @@ public sealed class MovieSearchService
                         {
                             "moviesearch_custom", new CustomAnalyzer
                             {
-                                Tokenizer = "nori_none",
+                                Tokenizer = "nori_custom",
                                 CharFilter = new[] {"html_strip"},
                             }
                         }
