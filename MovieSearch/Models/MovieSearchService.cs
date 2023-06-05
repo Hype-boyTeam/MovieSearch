@@ -47,11 +47,14 @@ public sealed class MovieSearchService
     /// <param name="limit">
     /// 검색되는 영화의 최대 갯수를 제한합니다.
     /// </param>
+    /// <param name="minimumScore">
+    /// 검색되는 영화가 검색되기 위한 최소 점수입니다.
+    /// </param>
     /// <returns>
     /// <paramref name="text"/>가 나온 적이 있는 영화의 id 목록입니다.
     /// 가장 관련성이 높은 것이 앞에 배치됩니다.
     /// </returns>
-    public async Task<IList<Guid>> FindMovies(string text, int limit = 30)
+    public async Task<IList<Guid>> FindMovies(string text, int limit = 30, float minimumScore = 1.0f)
     {
         var request = new SearchRequest(IndexName)
         {
@@ -60,7 +63,8 @@ public sealed class MovieSearchService
             Query = new MatchQuery(Infer.Field<MovieDocument>(f => f.Text))
             {
                 Query = text,
-            }
+            },
+            MinScore = minimumScore,
         };
 
         var response = await _elastic.SearchAsync<MovieDocument>(request);
