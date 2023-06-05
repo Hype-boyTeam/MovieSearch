@@ -114,7 +114,7 @@ public sealed class MovieSearchService
                         {
                             "nori_none", new NoriTokenizer
                             {
-                                DecompoundMode = NoriDecompoundMode.None,
+                                DecompoundMode = NoriDecompoundMode.Mixed,
                             }
                         }
                     },
