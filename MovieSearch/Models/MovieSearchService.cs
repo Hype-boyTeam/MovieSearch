@@ -1,6 +1,5 @@
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Analysis;
-using Elastic.Clients.Elasticsearch.Core.Search;
 using Elastic.Clients.Elasticsearch.IndexManagement;
 using Elastic.Clients.Elasticsearch.Mapping;
 using Elastic.Clients.Elasticsearch.QueryDsl;
@@ -38,13 +37,6 @@ public sealed class MovieSearchService
                 $"Failed to create an index for {document.Name}: {createResponse.DebugInformation}");
         }
     }
-    public async Task<string> ExtractKoreanTextFromXml(string xmlText)
-    {
-        string koreanText = Regex.Replace(xmlText, "<.*?>", string.Empty);
-        koreanText = Regex.Replace(koreanText, @"[^가-힣\s]", string.Empty);
-
-        return koreanText;
-    }
 
     /// <summary>
     /// 주어진 <paramref name="text"/>가 나온 적이 있는 영화를 검색합니다.
@@ -61,14 +53,13 @@ public sealed class MovieSearchService
     /// </returns>
     public async Task<IList<Guid>> FindMovies(string text, int limit = 30)
     {
-        string KoreanText = await ExtractKoreanTextFromXml(text);
         var request = new SearchRequest(IndexName)
         {
             From = 0,
             Size = limit,
             Query = new MatchQuery(Infer.Field<MovieDocument>(f => f.Text))
             {
-                Query = KoreanText
+                Query = text,
             }
         };
 
@@ -111,11 +102,13 @@ public sealed class MovieSearchService
                 {
                     Analyzers = new Analyzers
                     {
-                        {"moviesearch_custom", new NoriAnalyzer()}
-                    },
-                    CharFilters = new CharFilters
-                    {
-                        {"moviesearch_filter", new HtmlStripCharFilter()}
+                        {
+                            "moviesearch_custom", new CustomAnalyzer
+                            {
+                                Tokenizer = "nori_tokenizer",
+                                CharFilter = new[] {"html_strip"},
+                            }
+                        }
                     },
                 }
             },
@@ -132,7 +125,7 @@ public sealed class MovieSearchService
                     {
                         x => x.Name, new TextProperty
                         {
-                            Analyzer = "moviesearch_custom"
+                            Analyzer = "moviesearch_custom",
                         }
                     }
                 }
@@ -162,7 +155,4 @@ public sealed class MovieSearchService
 
         _logger.LogInformation("Removed Elasticsearch indices");
     }
-   
 }
-
-
