@@ -56,13 +56,18 @@ public sealed class MovieSearchService
     /// </returns>
     public async Task<IList<Guid>> FindMovies(string text, int limit = 30, float minimumScore = 1.0f)
     {
+        // 제목은 가중치 3배수
+        var titleField = Infer.Field<MovieDocument>(f => f.Name, 3.0d);
+        var textField = Infer.Field<MovieDocument>(f => f.Text);
+        
         var request = new SearchRequest(IndexName)
         {
             From = 0,
             Size = limit,
-            Query = new MatchQuery(Infer.Field<MovieDocument>(f => f.Text))
+            Query = new MultiMatchQuery
             {
                 Query = text,
+                Fields = titleField.And(textField),
             },
             MinScore = minimumScore,
         };
