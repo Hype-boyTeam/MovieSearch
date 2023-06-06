@@ -69,7 +69,7 @@ public sealed class MovieSearchService
                 Query = text,
                 Type = TextQueryType.Phrase,
                 Fields = textField.And(titleField),
-                Slop = 2,
+                Slop = 5,
             },
             MinScore = minimumScore,
         };
