@@ -111,6 +111,11 @@ public sealed class MovieSearchService
             {
                 Analysis = new IndexSettingsAnalysis
                 {
+                    CharFilters = new CharFilters
+                    {
+                        { "html_strip", new HtmlStripCharFilter() }
+                    },
+
                     Tokenizers = new Tokenizers
                     {
                         {
@@ -126,7 +131,7 @@ public sealed class MovieSearchService
                             "moviesearch_custom", new CustomAnalyzer
                             {
                                 Tokenizer = "nori_custom",
-                                // CharFilter = new[] {"html_strip"},
+                                CharFilter = new[] {"html_strip"},
                             }
                         }
                     },
